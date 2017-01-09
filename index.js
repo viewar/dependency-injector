@@ -4,6 +4,8 @@ const isObject = require('lodash/isObject');
 const isSymbol = require('lodash/isSymbol');
 const isFunction = require('lodash/isFunction');
 
+const UNINSTANTIATED = Symbol();
+
 module.exports = function createInjector() {
   const dependencies = {};
 
@@ -20,9 +22,15 @@ module.exports = function createInjector() {
     assertFactoryIsFunction(factory);
 
     if (isArray(args)) {
-      dependencies[token] = factory(...resolveArray(args));
+      dependencies[token] = {
+        instance: UNINSTANTIATED,
+        resolve: () => factory(...resolveArray(args)),
+      };
     } else if (isObject(args)) {
-      dependencies[token] = factory(resolveDictionary(args));
+      dependencies[token] = {
+        instance: UNINSTANTIATED,
+        resolve: () => factory(resolveDictionary(args)),
+      };
     } else {
       throw new Error(`Factory arguments must be passed as either a dictionary (plain object) or an array!`);
     }
@@ -32,7 +40,11 @@ module.exports = function createInjector() {
     assertTokenValid(token);
     assertTokenUsed(token);
 
-    return dependencies[token];
+    if (dependencies[token].instance === UNINSTANTIATED) {
+      dependencies[token].instance = dependencies[token].resolve();
+    }
+
+    return dependencies[token].instance;
   }
 
   function resolveDictionary(dictionary) {

@@ -172,3 +172,36 @@ test('dependencyInjector', assert => {
   assert.equals(actual, expected, msg);
   assert.end();
 });
+
+test('dependencyInjector', assert => {
+  const msg = '... instantiates dependencies lazily on resolve';
+
+  const injector = createInjector();
+
+  const DependencyToken = Symbol();
+  let factoryCalled = false;
+  const dependencyFactory = () => {factoryCalled = true; return {};};
+
+  injector.register(DependencyToken, dependencyFactory);
+
+  assert.notOk(factoryCalled, msg);
+
+  injector.resolve(DependencyToken);
+
+  assert.ok(factoryCalled, msg);
+  assert.end();
+});
+
+test('dependencyInjector', assert => {
+  const msg = '... provides the one and the same instance on every resolve';
+
+  const injector = createInjector();
+
+  const DependencyToken = Symbol();
+  const dependencyFactory = () => ({});
+
+  injector.register(DependencyToken, dependencyFactory);
+
+  assert.equals(injector.resolve(DependencyToken), injector.resolve(DependencyToken), msg);
+  assert.end();
+});
