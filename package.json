@@ -1,0 +1,23 @@
+{
+  "name": "dependency-injector",
+  "version": "1.0.0",
+  "description": "A simple dependency injector for ViewAR projects",
+  "main": "index.js",
+  "scripts": {
+    "test": "tape test.js"
+  },
+  "author": "Ivan Šakić <is@viewar.com>",
+  "copyright": "ViewAR GmbH 2017",
+  "license": "Proprietary",
+  "dependencies": {
+    "lodash": "^4.17.4"
+  },
+  "devDependencies": {
+    "tap": "^9.0.1",
+    "tape": "^4.6.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://git@github.com/viewar/dependency-injector.git"
+  }
+}
