@@ -193,6 +193,32 @@ test('dependencyInjector', assert => {
 });
 
 test('dependencyInjector', assert => {
+  const msg = '... instantiates chained dependencies lazily on resolve';
+
+  const injector = createInjector();
+
+  const TokenA = Symbol();
+  let factoryCalled = false;
+  const tokenAFactory = () => {factoryCalled = true; return {};};
+
+  const TokenB = Symbol();
+  const tokenBFactory = () => ({});
+
+  injector.register(TokenA, tokenAFactory, []);
+
+  assert.notOk(factoryCalled, msg);
+
+  injector.register(TokenB, tokenAFactory, [TokenA]);
+
+  assert.notOk(factoryCalled, msg);
+
+  injector.resolve(TokenB);
+
+  assert.ok(factoryCalled, msg);
+  assert.end();
+});
+
+test('dependencyInjector', assert => {
   const msg = '... provides the one and the same instance on every resolve';
 
   const injector = createInjector();
