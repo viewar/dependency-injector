@@ -1,22 +1,24 @@
-const isString = require('lodash/isString');
-const isArray = require('lodash/isArray');
-const isObject = require('lodash/isObject');
-const isSymbol = require('lodash/isSymbol');
-const isFunction = require('lodash/isFunction');
+var isString = require('lodash/isString');
+var isArray = require('lodash/isArray');
+var isObject = require('lodash/isObject');
+var isSymbol = require('lodash/isSymbol');
+var isFunction = require('lodash/isFunction');
+var isUndefined = require('lodash/isUndefined');
 
-const UNINSTANTIATED = Symbol();
+var UNINSTANTIATED = Symbol();
 
 module.exports = function createInjector() {
-  const dependencies = {};
+  var dependencies = {};
 
   return {
-    register,
-    resolve,
-    resolveDictionary,
-    resolveArray,
+    register: register,
+    resolve: resolve,
+    resolveDictionary: resolveDictionary,
+    resolveArray: resolveArray,
   };
 
-  function register(token, factory, args = {}) {
+  function register(token, factory, args) {
+    args = isUndefined(args) ? {} : args;
     assertTokenValid(token);
     assertTokenUnused(token);
     assertFactoryIsFunction(factory);
@@ -24,15 +26,19 @@ module.exports = function createInjector() {
     if (isArray(args)) {
       dependencies[token] = {
         instance: UNINSTANTIATED,
-        resolve: () => factory(...resolveArray(args)),
+        resolve: function () {
+          return factory.apply(null, resolveArray(args));
+        }
       };
     } else if (isObject(args)) {
       dependencies[token] = {
         instance: UNINSTANTIATED,
-        resolve: () => factory(resolveDictionary(args)),
+        resolve: function () {
+          return factory(resolveDictionary(args));
+        }
       };
     } else {
-      throw new Error(`Factory arguments must be passed as either a dictionary (plain object) or an array!`);
+      throw new Error('Factory arguments must be passed as either a dictionary (plain object) or an array!');
     }
   }
 
@@ -49,12 +55,20 @@ module.exports = function createInjector() {
 
   function resolveDictionary(dictionary) {
     return Object.keys(dictionary)
-        .map(token => ({[token]: resolve(dictionary[token])}))
-        .reduce((object, part) => Object.assign(object, part), {});
+        .map(function (token) {
+          var object = {};
+          object[token] = resolve(dictionary[token]);
+          return object;
+        })
+        .reduce(function (object, part) {
+          return Object.assign(object, part);
+        }, {});
   }
 
   function resolveArray(array) {
-    return array.map(token => resolve(token));
+    return array.map(function (token) {
+      return resolve(token)
+    });
   }
 
 //======================================================================================================================
@@ -66,19 +80,19 @@ module.exports = function createInjector() {
   }
 
   function assertTokenValid(token) {
-    !isString(token) && !isSymbol(token) && fail(`Token "${ token.toString() }" must be either a string or a symbol!`);
+    !isString(token) && !isSymbol(token) && fail('Token "' + token.toString() + '" must be either a string or a symbol!');
   }
 
   function assertTokenUnused(token) {
-    dependencies[token] && fail(`Token "${ token.toString() }" is already registered!`);
+    dependencies[token] && fail('Token "' + token.toString() + '" is already registered!');
   }
 
   function assertTokenUsed(token) {
-    !dependencies[token] && fail(`Token "${ token.toString() }" is not registered!`);
+    !dependencies[token] && fail('Token "' + token.toString() + '" is not registered!');
   }
 
   function assertFactoryIsFunction(factory) {
-    !isFunction(factory) && fail(`Factory "${ factory.toString() }" must be a function!`);
+    !isFunction(factory) && fail('Factory "' + factory.toString() + '" must be a function!');
   }
 
 };
